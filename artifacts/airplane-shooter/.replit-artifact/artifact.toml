@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Airplane Shooter Game"
+version = "1.0.0"
+id = "artifacts/airplane-shooter"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 23699
+
+[services.development]
+run = "pnpm --filter @workspace/airplane-shooter run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/airplane-shooter", "run", "build" ]
+publicDir = "artifacts/airplane-shooter/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "23699"
+BASE_PATH = "/"
