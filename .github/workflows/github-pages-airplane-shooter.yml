@@ -31,9 +31,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Must match the pnpm major that generated pnpm-lock.yaml (pnpm 9 vs 10 treat overrides differently).
       - uses: pnpm/action-setup@v4
         with:
-          version: 9
+          version: 10.33.0
 
       - uses: actions/setup-node@v4
         with:
