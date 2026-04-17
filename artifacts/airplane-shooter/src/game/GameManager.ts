@@ -104,6 +104,7 @@ export class GameManager {
     this.highScore = this._readHighScore();
     this._initStars();
     this._bindPointer();
+    this._bindKeyboard();
   }
 
   // ─── Public API ──────────────────────────────────────────────────────────
@@ -144,6 +145,7 @@ export class GameManager {
   destroy() {
     cancelAnimationFrame(this.animFrame);
     this._unbindPointer();
+    this._unbindKeyboard();
   }
 
   private _readHighScore(): number {
@@ -181,6 +183,24 @@ export class GameManager {
     this.canvas.removeEventListener("pointermove", this._onPointerMove);
     this.canvas.removeEventListener("pointerdown", this._onPointerDown);
   }
+
+  private _bindKeyboard() {
+    window.addEventListener("keydown", this._onKeyDown);
+  }
+
+  private _unbindKeyboard() {
+    window.removeEventListener("keydown", this._onKeyDown);
+  }
+
+  private _onKeyDown = (e: KeyboardEvent) => {
+    if (e.key !== "Escape") return;
+    if (this.state !== "playing" && this.state !== "paused") return;
+    if (this._bossTransitionActive()) return;
+    if (this.playerDeathUntil > 0) return;
+    e.preventDefault();
+    this.state = this.state === "playing" ? "paused" : "playing";
+    this._notifyState();
+  };
 
   private _canvasCoords(clientX: number, clientY: number) {
     const rect = this.canvas.getBoundingClientRect();
@@ -762,9 +782,9 @@ export class GameManager {
       this.frameCount++;
       this._update();
       this._draw();
-      if (this.state === "playing") {
+      if (this.state === "playing" || this.state === "paused") {
         this._loop();
-        if (this.frameCount % 3 === 0) {
+        if (this.state === "playing" && this.frameCount % 3 === 0) {
           this.onHUDUpdate?.(this.getHUD());
         }
       }
@@ -878,7 +898,7 @@ export class GameManager {
 
     this.stars.forEach(s => s.draw(ctx));
 
-    if (this.state !== "playing") {
+    if (this.state !== "playing" && this.state !== "paused") {
       ctx.restore();
       return;
     }
@@ -898,6 +918,30 @@ export class GameManager {
       this._drawPlayerCrashOverlay(ctx);
     }
     this._drawBossWarpTransitionOverlay(ctx);
+    ctx.restore();
+
+    if (this.state === "paused") {
+      this._drawPauseOverlay(ctx);
+    }
+  }
+
+  private _drawPauseOverlay(ctx: CanvasRenderingContext2D) {
+    const W = CANVAS_WIDTH;
+    const H = CANVAS_HEIGHT;
+    ctx.save();
+    ctx.fillStyle = "rgba(4, 8, 18, 0.72)";
+    ctx.fillRect(0, 0, W, H);
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.shadowColor = "#5bc0eb";
+    ctx.shadowBlur = 28;
+    ctx.fillStyle = "#e8f4ff";
+    ctx.font = "bold 36px system-ui, Segoe UI, sans-serif";
+    ctx.fillText("PAUSED", W / 2, H * 0.44);
+    ctx.shadowBlur = 10;
+    ctx.font = "600 15px system-ui, Segoe UI, sans-serif";
+    ctx.fillStyle = "rgba(180, 210, 255, 0.92)";
+    ctx.fillText("Press ESC to resume", W / 2, H * 0.54);
     ctx.restore();
   }
 

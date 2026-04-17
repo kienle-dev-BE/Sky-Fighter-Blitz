@@ -429,7 +429,7 @@ export default function Game() {
         />
 
         {/* HUD */}
-        {gameState === "playing" && (
+        {(gameState === "playing" || gameState === "paused") && (
           <HUDOverlay hud={hud} />
         )}
 
